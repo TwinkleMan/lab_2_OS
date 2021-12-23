@@ -222,9 +222,9 @@ void virtualAllocMem() {
 
 
 void writeData() {
-    PVOID address = NULL;
+    LPVOID address = NULL;
     SIZE_T size;
-    string message;
+    string message = "";
     MEMORY_BASIC_INFORMATION memInfo;
     CHAR* destination = NULL;
     char key = '1';
@@ -243,15 +243,15 @@ void writeData() {
     if (address != NULL)
     {
         VirtualQuery(address, &memInfo, 256);
-        if (memInfo.AllocationProtect && (PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_READWRITE | PAGE_WRITECOPY))
+        if (memInfo.State && (PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_READWRITE | PAGE_WRITECOPY))
         {
             destination = (CHAR*)address;
-            CopyMemory(address, message.c_str(), size);
-            cout << endl << "Ячейка памяти 0x" << address << " заполнена успешно. Введённая информация:" << endl;
-            for (size_t i = 0; i < message.length(); i++) {
-                cout << ((CHAR*)address)[i];
-            }
+            CopyMemory(destination, message.c_str(), size);
+            cout << endl << "Ячейка памяти " << address << " заполнена успешно. Введённая информация:" << endl;
+            cout << destination;
             cout << endl;
+
+            //VirtualFree(destination,0,MEM_RELEASE);
         }
         else {
             cout << "Уровень доступа не соответствует требованиям! Код ошибки: " << GetLastError() << endl;
@@ -266,26 +266,115 @@ void writeData() {
     system("CLS");
 }
 
+void protectMenu() {
+
+    cout << "Выберите уровень защиты:" << endl;
+    cout << "1) PAGE_EXECUTE" << endl;
+    cout << "2) PAGE_EXECUTE_READ" << endl;
+    cout << "3) PAGE_EXECUTE_READWRITE" << endl;
+    cout << "4) PAGE_EXECUTE_WRITECOPY" << endl;
+    cout << "5) PAGE_NOACCESS" << endl;
+    cout << "6) PAGE_READONLY" << endl;
+    cout << "7) PAGE_READWRITE" << endl;
+    cout << "8) PAGE_WRITECOPY" << endl;
+
+}
+
+DWORD protectChoose(int x) {
+
+    DWORD level;
+
+    switch (x) {
+        case 1:
+            level = PAGE_EXECUTE;
+            break;
+        case 2:
+            level = PAGE_EXECUTE_READ;
+            break;
+        case 3:
+            level = PAGE_EXECUTE_READWRITE;
+            break;
+        case 4:
+            level = PAGE_EXECUTE_WRITECOPY;
+            break;
+        case 5:
+            level = PAGE_NOACCESS;
+            break;
+        case 6:
+            level = PAGE_READONLY;
+            break;
+        case 7:
+            level = PAGE_READWRITE;
+            break;
+        case 8:
+            level = PAGE_WRITECOPY;
+            break;
+    }
+
+    return level;
+}
 
 void virtualProtect() {
-    //code
+    char key = '1';
+
+    system("CLS");
+    LPVOID address = NULL;
+
+    int inputLevel;
+
+    DWORD oldLevel = 0;
+    DWORD newLevel = 0;
+
+    cout << "Введите адрес: 0x";
+    cin >> address;
+
+    if (address != NULL) {
+        protectMenu();
+        cin >> inputLevel;
+
+        system("cls");
+
+        newLevel = protectChoose(inputLevel);
+        cout << "Новый уровень защиты: ";
+        memProtect(newLevel);
+        cout << endl;
+        if (VirtualProtect(address, sizeof(DWORD), newLevel, &oldLevel))
+        {
+            cout << "Старый уровень защиты:" << endl;
+            memProtect(oldLevel);
+        }
+        else cout << "Ошибка: " << GetLastError() << endl;
+
+    }
+    else cout << "Нулевой адрес (NULL)" << endl;
+
+    cout << "\n0) Выход" << endl;
+    do {
+        cin >> key;
+    } while (key != '0');
+    system("CLS");
+
 }
 
 
 void virtualFree() {
-    //code
-}
+    system("CLS");
+    char key = '1';
 
-void writeAddresses() {
-    MEMORY_BASIC_INFORMATION buff;
-    LPCVOID add = (LPCVOID)0x00010000;
-    int offset = 4096 * 10;
+    LPVOID address = NULL;
 
-    while (VirtualQuery(add, &buff, 256))
-    {
-        if ((buff.AllocationProtect && (PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_READWRITE | PAGE_WRITECOPY)) && (buff.State == MEM_COMMIT)) {
-            cout << add << " protect = " << buff.AllocationProtect << endl;
-        }
-        add = (LPCVOID)((long long)add + offset);
+    cout << "Введите адрес для возврата физической памяти и освобождения региона: 0x";
+    cin >> address;
+
+    if (VirtualFree((CHAR*)address,0,MEM_RELEASE)) {
+        cout << "Регион успешно освобожден\n" << endl;
+    } else {
+        cout << "Что-то пошло не так, код ошибки: " << GetLastError() << endl;
     }
+
+    cout << "\n0) Выход" << endl;
+    do {
+        cin >> key;
+    } while (key != '0');
+    system("CLS");
 }

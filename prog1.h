@@ -11,6 +11,4 @@ void writeData() ;
 void virtualProtect();
 void virtualFree();
 
-void writeAddresses();
-
 #endif //LAB_2_PROG1_H

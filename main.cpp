@@ -12,7 +12,6 @@ menuItem mainMenu[] {
         {6,"Запись данных в ячейки памяти",writeData},
         {7,"Установка защиты доступа для заданного региона памяти",virtualProtect},
         {8,"Возврат физической памяти и освобождение региона адресного пространства",virtualFree},
-        {9,"адреса",writeAddresses},
         {0,"Выход"}
 };
 static const unsigned int mainMenuSize = sizeof(mainMenu) / sizeof(mainMenu[0]);
